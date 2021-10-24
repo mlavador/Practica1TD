@@ -1,4 +1,4 @@
-# Tipología de datos - Practica 1
+# Tipología de datos - Práctica 1
 
 Solución a la primera práctica de la asignatura de tipología de datos
 
