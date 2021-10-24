@@ -1,2 +1,8 @@
-# Practica1TD
+# Tipología de datos - Practica 1
+
 Solución a la primera práctica de la asignatura de tipología de datos
+
+## Autores
+
+- Mateo Rodríguez Lavado
+- Eduard Conesa Guerrero
