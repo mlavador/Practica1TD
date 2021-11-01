@@ -2,37 +2,66 @@
 """
 Created on Wed Oct 27 19:35:57 2021
 
-@author: mlavador
+@author: mlavador, edcogue
 """
 
-import requests
+from selenium import webdriver
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+from time import sleep
 from bs4 import BeautifulSoup
 import pandas as pd
 
 def main():
-    url_pages = ['https://www.laliga.com/laliga-santander/clasificacion',
-                 'https://www.laliga.com/laliga-smartbank/clasificacion',
-                 'https://www.laliga.com/futbol-femenino/clasificacion']
+    # Hay que instalar el driver geckodriver previamente (Para firefox)
+    driver = webdriver.Firefox()
+    driver.get("https://www.laliga.com/")
+    WebDriverWait(driver, 20)\
+    .until(EC.element_to_be_clickable((By.CSS_SELECTOR,
+                                      "#onetrust-accept-btn-handler")))\
+    .click()
+
+    categorias = driver.find_elements(By.CSS_SELECTOR,".styled__CompetitionMenuItem-sc-7qz1ev-3>a")
+    sleep(3)
     columns = ["liga","jornada","tipo_partido","posición", "id_equipo","equipo","puntos","pj","pg","pe","pp","gf","gc","dg"]
     df = pd.DataFrame(columns = columns)
-    for url in url_pages:
-        soup = get_soup(url)
-        league = get_league_name(soup)
-        game_type_list = get_name_games(soup)
-        df_table = get_classification_table(soup,league,'jornada11',game_type_list)
-        df = df.append(df_table, ignore_index=True)
-        
+    for el in categorias:
+        try:
+            WebDriverWait(driver, 20).until(EC.element_to_be_clickable(el)).click()
+            sleep(5)
+            submenu = el.find_elements(By.XPATH,"../div/div/span/a")
+            for sub_el in submenu:
+                if sub_el.get_attribute("innerHTML") == "Clasificación":
+                    WebDriverWait(driver, 20).until(EC.element_to_be_clickable(sub_el)).click()
+                    sleep(5)
+                    break
+
+
+            jornadas_menu = driver.find_element(By.CSS_SELECTOR,".styled__DropdownContainer-sc-1engvts-6 ul")
+            jornadas = jornadas_menu.find_elements(By.XPATH,"./li")
+            for jornada in jornadas:
+                WebDriverWait(driver, 20)\
+                .until(EC.element_to_be_clickable((By.CSS_SELECTOR,
+                                                ".styled__DropdownContainer-sc-1engvts-6")))\
+                .click()
+                sleep(2)
+                WebDriverWait(driver, 20).until(EC.element_to_be_clickable(jornada)).click()
+                sleep(5)
+                page_content = driver.page_source                
+                soup = BeautifulSoup(page_content, 'html.parser')
+                league = get_league_name(soup)
+                game_type_list = get_name_games(soup)
+                df_table = get_classification_table(soup,league,'jornada11',game_type_list)
+                df = df.append(df_table, ignore_index=True)
+
+        except Exception as e:
+            print(e)
+            print("Liga sin jornadas")
+            pass
     df.to_csv("classification_table.csv",header=True,index=False)
-
-   
-def get_soup(url):
-    """
-    Devuelve un elemento BeautifulSoup
-
-    Dada una url devuelve el arbol DOC del html
-    """
-    page = requests.get(url).text 
-    return BeautifulSoup(page, "lxml")
+    sleep(2)
+    driver.close()
 
 def get_league_name(soup):
     """
