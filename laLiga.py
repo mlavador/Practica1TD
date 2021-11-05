@@ -37,7 +37,8 @@ def main():
     session.post("https://fanslaliga.laliga.com/api/v2/loginMail", data=dict(
     email="eduard2207@hotmail.com",
     password="UOC.scraping&"
-    ), headers={"AppId": "6457fa17-1224-416a-b21a-ee6ce76e9bc0"})
+    ), headers={"AppId": "6457fa17-1224-416a-b21a-ee6ce76e9bc0",
+                "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:94.0) Gecko/20100101 Firefox/94.0"})
     r_delay = get_timestamp() - t
     sleep(min_time+r_delay*2)
     
