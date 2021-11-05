@@ -1,67 +1,142 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Oct 27 19:35:57 2021
-
-@author: mlavador, edcogue
-"""
-
 from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.firefox import options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
 from time import sleep
+from time import time as get_timestamp
 from bs4 import BeautifulSoup
 import pandas as pd
+import requests
+
+
+
+class element_has_css_class(object):
+    """
+    Espera a que el elemento tenga la clase indicada
+    """
+    def __init__(self, locator, css_class):
+        self.locator = locator
+        self.css_class = css_class
+
+    def __call__(self, driver):
+        element = driver.find_element(*self.locator)
+        if self.css_class in element.get_attribute("class"):
+            return element
+        else:
+            return False
+
 
 def main():
+    min_time=30
+    # Obtener cookies de sesion
+    session = requests.Session()
+    r=session.post("https://fanslaliga.laliga.com/api/v2/loginMail", data=dict(
+    email="eduard2207@hotmail.com",
+    password="UOC.scraping&"
+    ), headers={"AppId": "6457fa17-1224-416a-b21a-ee6ce76e9bc0"})
+
+    cookies = session.cookies.get_dict()
+
     # Hay que instalar el driver geckodriver previamente (Para firefox)
-    driver = webdriver.Firefox()
+    profile = webdriver.FirefoxProfile()
+    profile.set_preference("general.useragent.override", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:94.0) Gecko/20100101 Firefox/94.0")
+    driver = webdriver.Firefox(profile)
+    
     driver.get("https://www.laliga.com/")
+    
+    t = get_timestamp()
+    r_delay = get_timestamp() - t
+
+    for key in cookies:
+        driver.add_cookie({"name" : key, "value" : cookies[key]})
+
+    driver.get("https://www.laliga.com/")
+    
     WebDriverWait(driver, 20)\
     .until(EC.element_to_be_clickable((By.CSS_SELECTOR,
                                       "#onetrust-accept-btn-handler")))\
     .click()
 
     categorias = driver.find_elements(By.CSS_SELECTOR,".styled__CompetitionMenuItem-sc-7qz1ev-3>a")
-    sleep(3)
     columns = ["liga","jornada","tipo_partido","posición", "id_equipo","equipo","puntos","pj","pg","pe","pp","gf","gc","dg"]
     df = pd.DataFrame(columns = columns)
+    sleep(min_time+r_delay*2))
+
     for el in categorias:
         try:
+            t = get_timestamp()
+            wait_spinner_ends(driver)
             WebDriverWait(driver, 20).until(EC.element_to_be_clickable(el)).click()
-            sleep(5)
+            r_delay = get_timestamp() - t
+            sleep(min_time+r_delay*2))
+
             submenu = el.find_elements(By.XPATH,"../div/div/span/a")
             for sub_el in submenu:
                 if sub_el.get_attribute("innerHTML") == "Clasificación":
+                    t = get_timestamp()
+                    wait_spinner_ends(driver)
                     WebDriverWait(driver, 20).until(EC.element_to_be_clickable(sub_el)).click()
-                    sleep(5)
+                    r_delay = get_timestamp() - t
+                    sleep(min_time+r_delay*2))
                     break
 
 
             jornadas_menu = driver.find_element(By.CSS_SELECTOR,".styled__DropdownContainer-sc-1engvts-6 ul")
             jornadas = jornadas_menu.find_elements(By.XPATH,"./li")
             for jornada in jornadas:
+                t = get_timestamp()
+                wait_spinner_ends(driver)
                 WebDriverWait(driver, 20)\
                 .until(EC.element_to_be_clickable((By.CSS_SELECTOR,
                                                 ".styled__DropdownContainer-sc-1engvts-6")))\
                 .click()
-                sleep(2)
+                r_delay = get_timestamp() - t
+                sleep(min_time+r_delay*2))
+
+                t = get_timestamp()
+                wait_spinner_ends(driver)
                 WebDriverWait(driver, 20).until(EC.element_to_be_clickable(jornada)).click()
-                sleep(5)
+                r_delay = get_timestamp() - t
+                sleep(min_time+r_delay*2))
+
+                wait_table_load(driver)
                 page_content = driver.page_source                
                 soup = BeautifulSoup(page_content, 'html.parser')
                 league = get_league_name(soup)
                 game_type_list = get_name_games(soup)
-                df_table = get_classification_table(soup,league,'jornada11',game_type_list)
+                df_table = get_classification_table(soup,league,jornada.get_attribute("innerHTML"),game_type_list)
                 df = df.append(df_table, ignore_index=True)
 
         except Exception as e:
             print(e)
-            print("Liga sin jornadas")
             pass
+
     df.to_csv("classification_table.csv",header=True,index=False)
-    sleep(2)
     driver.close()
+
+def wait_spinner_ends(driver):
+    WebDriverWait(driver, 20).until(element_has_css_class((By.CSS_SELECTOR, '.styled__SpinnerContainer-uwgd15-0'), "hide"))
+    check_spots(driver)
+
+def wait_table_load(driver):
+    WebDriverWait(driver, 20).until(element_has_css_class((By.CSS_SELECTOR, '.styled__StandingTableBody-e89col-5'), "cDiDQb"))
+        
+def check_spots(driver):
+    driver.execute_script("""
+    var element = document.querySelector('#rctfl-widgets-container');
+    if (element)
+        element.parentNode.removeChild(element);
+
+    var element = document.getElementsByTagName("body")
+    element[0].classList.remove("rctfl-blur-page")
+
+    var element = document.querySelector('#rctfl-block-page');
+    if (element)
+        element.parentNode.removeChild(element);
+    """) 
 
 def get_league_name(soup):
     """
@@ -116,6 +191,5 @@ def get_classification_table(soup,league,journey,game_type_list):
         game_type_number=game_type_number + 1
     return pd.DataFrame.from_records(rows,columns=columns)
 
-if __name__ == "__main__":
+if __name__=="__main__":
     main()
-
