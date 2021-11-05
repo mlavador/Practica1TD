@@ -33,11 +33,14 @@ def main():
     min_time=30
     # Obtener cookies de sesion
     session = requests.Session()
-    r=session.post("https://fanslaliga.laliga.com/api/v2/loginMail", data=dict(
+    t = get_timestamp()
+    session.post("https://fanslaliga.laliga.com/api/v2/loginMail", data=dict(
     email="eduard2207@hotmail.com",
     password="UOC.scraping&"
     ), headers={"AppId": "6457fa17-1224-416a-b21a-ee6ce76e9bc0"})
-
+    r_delay = get_timestamp() - t
+    sleep(min_time+r_delay*2)
+    
     cookies = session.cookies.get_dict()
 
     # Hay que instalar el driver geckodriver previamente (Para firefox)
@@ -45,14 +48,15 @@ def main():
     profile.set_preference("general.useragent.override", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:94.0) Gecko/20100101 Firefox/94.0")
     driver = webdriver.Firefox(profile)
     
-    driver.get("https://www.laliga.com/")
-    
+    #Accedemos a la liga antes de poner la cookie para evitar cookie-averse
     t = get_timestamp()
+    driver.get("https://www.laliga.com/")
     r_delay = get_timestamp() - t
 
     for key in cookies:
         driver.add_cookie({"name" : key, "value" : cookies[key]})
 
+    #recargamos la página con la cookie ya añadida
     driver.get("https://www.laliga.com/")
     
     WebDriverWait(driver, 20)\
@@ -63,7 +67,7 @@ def main():
     categorias = driver.find_elements(By.CSS_SELECTOR,".styled__CompetitionMenuItem-sc-7qz1ev-3>a")
     columns = ["liga","jornada","tipo_partido","posición", "id_equipo","equipo","puntos","pj","pg","pe","pp","gf","gc","dg"]
     df = pd.DataFrame(columns = columns)
-    sleep(min_time+r_delay*2))
+    sleep(min_time+r_delay*2)
 
     for el in categorias:
         try:
@@ -71,7 +75,7 @@ def main():
             wait_spinner_ends(driver)
             WebDriverWait(driver, 20).until(EC.element_to_be_clickable(el)).click()
             r_delay = get_timestamp() - t
-            sleep(min_time+r_delay*2))
+            sleep(min_time+r_delay*2)
 
             submenu = el.find_elements(By.XPATH,"../div/div/span/a")
             for sub_el in submenu:
@@ -80,7 +84,7 @@ def main():
                     wait_spinner_ends(driver)
                     WebDriverWait(driver, 20).until(EC.element_to_be_clickable(sub_el)).click()
                     r_delay = get_timestamp() - t
-                    sleep(min_time+r_delay*2))
+                    sleep(min_time+r_delay*2)
                     break
 
 
@@ -94,13 +98,13 @@ def main():
                                                 ".styled__DropdownContainer-sc-1engvts-6")))\
                 .click()
                 r_delay = get_timestamp() - t
-                sleep(min_time+r_delay*2))
+                sleep(min_time+r_delay*2)
 
                 t = get_timestamp()
                 wait_spinner_ends(driver)
                 WebDriverWait(driver, 20).until(EC.element_to_be_clickable(jornada)).click()
                 r_delay = get_timestamp() - t
-                sleep(min_time+r_delay*2))
+                sleep(min_time+r_delay*2)
 
                 wait_table_load(driver)
                 page_content = driver.page_source                
