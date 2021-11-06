@@ -10,7 +10,7 @@ from time import time as get_timestamp
 from bs4 import BeautifulSoup
 import pandas as pd
 import requests
-
+import sys, getopt
 
 
 class element_has_css_class(object):
@@ -29,14 +29,17 @@ class element_has_css_class(object):
             return False
 
 
-def main():
+def main(args):
+    user, password = arguments_parser(args)
+    if (user == "" or password == ""):
+        print("Using without logging")
     min_time=30
     # Obtener cookies de sesion
     session = requests.Session()
     t = get_timestamp()
     session.post("https://fanslaliga.laliga.com/api/v2/loginMail", data=dict(
-    email="eduard2207@hotmail.com",
-    password="UOC.scraping&"
+    email=user,
+    password=password
     ), headers={"AppId": "6457fa17-1224-416a-b21a-ee6ce76e9bc0",
                 "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:94.0) Gecko/20100101 Firefox/94.0"})
     r_delay = get_timestamp() - t
@@ -119,8 +122,26 @@ def main():
             print(e)
             pass
 
-    df.to_csv("classification_table.csv",header=True,index=False)
+    df.to_csv("clasificacion_por_jornadas_LaLiga_21-22.csv",header=True,index=False)
     driver.close()
+
+def arguments_parser(argv):
+    user = ''
+    password = ''
+    try:
+        opts, args = getopt.getopt(argv,"hu:p:",["user=","password="])
+    except getopt.GetoptError:
+        print("Usage -u User -p Password")
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt == '-h':
+            print("Usage -u User -p Password")
+            sys.exit()
+        elif opt in ("-u", "--user"):
+            user = arg
+        elif opt in ("-p", "--password"):
+            password = arg
+    return user, password
 
 def wait_spinner_ends(driver):
     WebDriverWait(driver, 20).until(element_has_css_class((By.CSS_SELECTOR, '.styled__SpinnerContainer-uwgd15-0'), "hide"))
@@ -197,4 +218,4 @@ def get_classification_table(soup,league,journey,game_type_list):
     return pd.DataFrame.from_records(rows,columns=columns)
 
 if __name__=="__main__":
-    main()
+    main(sys.argv[1:])
