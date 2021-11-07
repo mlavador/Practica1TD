@@ -22,6 +22,6 @@ El dataset resultante se encuentra en el DOI de Zenodo 10.5281/zenodo.5652052
 
 ## Requerimientos
 
--Es necesario instalar todas las dependencias del requirements.txt
--Tener instalado Mozilla Firefox, que será utilizado por Selenium.
--Instalar geckodriver para utilizar Selenium con Mozilla Firefox.
+- Es necesario instalar todas las dependencias del requirements.txt
+- Tener instalado Mozilla Firefox, que será utilizado por Selenium.
+- Instalar geckodriver para utilizar Selenium con Mozilla Firefox.
