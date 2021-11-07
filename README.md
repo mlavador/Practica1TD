@@ -11,6 +11,10 @@ Este repositorio contiene los siguientes ficheros:
 - laLiga.py: archivo python que contiene el código utilizado para realizar web scraping.
 - requirements.txt: archivo que indica cuáles son las librerias de python usadas y su versión.
 
+## Dataset
+
+El dataset resultante se encuentra en el DOI de Zenodo 10.5281/zenodo.5652052
+
 ## Autores
 
 - Mateo Rodríguez Lavado
