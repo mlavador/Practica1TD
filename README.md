@@ -10,6 +10,7 @@ Este repositorio contiene los siguientes ficheros:
 - README.md: contiene la información principal del repositorio.
 - laLiga.py: archivo python que contiene el código utilizado para realizar web scraping.
 - requirements.txt: archivo que indica cuáles son las librerias de python usadas y su versión.
+- Practica1.pdf: contiene las respuestas a las preguntas de la práctica.
 
 ## Dataset
 
