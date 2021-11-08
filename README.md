@@ -26,4 +26,4 @@ El dataset resultante se encuentra en el DOI de Zenodo 10.5281/zenodo.5652052
 - Es necesario instalar todas las dependencias del requirements.txt
 - Tener instalado Mozilla Firefox, que será utilizado por Selenium.
 - Instalar geckodriver para utilizar Selenium con Mozilla Firefox.
-- Para loguearse, es necesario pasar como parámetros al programa el usuario y la contraseña. Si no se pasan argumentos, el programa continua sin realizar el logueo.
+- Para loguearse es necesario pasar como parámetros al programa el usuario y la contraseña. Si no se pasan argumentos, el programa continua sin realizar el logueo.
